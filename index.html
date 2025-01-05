@@ -4,8 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera Selector 🎥</title>
+  <title>Camera App 📸</title>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://kit.fontawesome.com/5fc4420cfa.js" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -16,117 +17,106 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background-color: #111827;
+      background-color: #1f2937;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #f3f4f6;
-      overflow: hidden;
-    }
-
-    .header {
-      font-size: 2rem;
-      color: #60a5fa;
-      text-shadow: 2px 2px 10px rgba(0, 255, 255, 0.5);
-      animation: fadeInUp 2s ease-out;
-    }
-
-    @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     .camera-container {
-      max-width: 500px;
       width: 100%;
-      margin-bottom: 20px;
-      animation: fadeInUp 1.5s ease-out;
-    }
-
-    .camera-select {
-      display: flex;
-      flex-direction: column;
-      margin-top: 15px;
-      gap: 10px;
-    }
-
-    .camera-select label {
-      font-size: 1.2rem;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    .video-container {
+      max-width: 800px;
       position: relative;
-      width: 100%;
-      max-width: 600px;
-      height: auto;
       margin-bottom: 20px;
-      border-radius: 15px;
-      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
     }
 
     video {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
       border-radius: 15px;
+      object-fit: cover;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-    .btn-custom {
-      padding: 1rem 2rem;
-      font-size: 1.5rem;
-      border-radius: 50px;
-      background: linear-gradient(45deg, #f06, #4e4);
+    .camera-controls {
+      display: flex;
+      justify-content: space-between;
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      z-index: 2;
+    }
+
+    .control-btn {
+      background-color: rgba(0, 0, 0, 0.5);
       color: white;
       border: none;
+      padding: 10px;
+      border-radius: 50%;
+      font-size: 1.5rem;
       cursor: pointer;
-      transition: all 0.4s ease;
-      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
     }
 
-    .btn-custom:hover {
+    .control-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .shutter-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 20px;
+      border: none;
+      border-radius: 50%;
+      background-color: #34d399;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .shutter-btn:hover {
       transform: scale(1.1);
-      box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.4);
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
     }
 
-    .btn-custom:active {
+    .shutter-btn:active {
       transform: scale(1);
-      box-shadow: none;
+    }
+
+    .zoom-slider {
+      position: absolute;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      z-index: 2;
     }
 
     .filter-btns {
       display: flex;
-      gap: 15px;
-      margin-top: 10px;
+      gap: 20px;
+      margin-top: 15px;
     }
 
     .filter-btn {
       padding: 12px 24px;
       border-radius: 50px;
-      background-color: #34d399;
+      background-color: #38bdf8;
       color: white;
-      font-size: 1.1rem;
+      font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .filter-btn:hover {
-      background-color: #2b9a77;
+      background-color: #0ea5e9;
       transform: scale(1.1);
     }
 
     .filter-btn:active {
       transform: scale(1);
-    }
-
-    canvas {
-      display: none;
     }
 
     .filters {
@@ -138,30 +128,50 @@
       display: none;
     }
 
-    .filters input[type="range"] {
-      width: 200px;
+    canvas {
+      display: none;
     }
 
+    .flash-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
 
-  <h1 class="header">Camera Selector 🎥</h1>
-
   <div id="cameraContainer" class="camera-container"></div>
 
-  <div class="video-container">
-    <video id="videoFeed" autoplay playsinline class="rounded-lg"></video>
+  <div class="camera-controls">
+    <button id="prevCamera" class="control-btn"><i class="fas fa-chevron-left"></i></button>
+    <button id="nextCamera" class="control-btn"><i class="fas fa-chevron-right"></i></button>
   </div>
 
-  <button id="takePicture" class="btn-custom">Take Picture 📸</button>
+  <div class="video-container">
+    <video id="videoFeed" autoplay playsinline></video>
+  </div>
+
+  <button id="shutterBtn" class="shutter-btn"><i class="fas fa-circle"></i></button>
+
+  <div class="zoom-slider">
+    <input type="range" id="zoomSlider" min="1" max="3" step="0.1" value="1" />
+  </div>
 
   <div class="filter-btns">
-    <button id="filterBlackWhite" class="filter-btn">B/W Filter</button>
-    <button id="filterSepia" class="filter-btn">Sepia Filter</button>
-    <button id="resetFilters" class="filter-btn">Reset Filters</button>
+    <button id="filterBlackWhite" class="filter-btn">B/W</button>
+    <button id="filterSepia" class="filter-btn">Sepia</button>
+    <button id="resetFilters" class="filter-btn">Reset</button>
   </div>
+
+  <button id="flashBtn" class="flash-btn"><i class="fas fa-bolt"></i></button>
 
   <a id="downloadLink" class="hidden" download="captured-photo.png"></a>
   <canvas id="canvas"></canvas>
@@ -169,11 +179,15 @@
   <script>
     let currentStream = null;
     let currentFilter = null;
+    let currentCameraIndex = 0;
+    let cameras = [];
+    let flashOn = false;
 
     async function getCameras() {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices.filter(device => device.kind === 'videoinput');
+        cameras = videoInputs;
 
         const cameraContainer = document.getElementById('cameraContainer');
         cameraContainer.innerHTML = ''; // Clear existing options
@@ -183,36 +197,8 @@
           return;
         }
 
-        videoInputs.forEach((device, index) => {
-          const radio = document.createElement('input');
-          radio.type = 'radio';
-          radio.name = 'camera';
-          radio.value = device.deviceId;
-          radio.id = `camera${index}`;
-          if (index === 0) radio.checked = true;
-
-          const label = document.createElement('label');
-          label.htmlFor = `camera${index}`;
-          label.textContent = device.label || `Camera ${index + 1}`;
-          label.className = 'label cursor-pointer text-white text-xl';
-
-          const wrapper = document.createElement('div');
-          wrapper.className = 'flex items-center space-x-2';
-
-          wrapper.appendChild(radio);
-          wrapper.appendChild(label);
-
-          cameraContainer.appendChild(wrapper);
-
-          // Camera change event listener
-          radio.addEventListener('change', () => {
-            startCamera(device.deviceId);
-            alert('Camera switched!');
-          });
-        });
-
-        // Automatically start the first camera
-        await startCamera(videoInputs[0].deviceId);
+        // Start the first camera
+        await startCamera(cameras[currentCameraIndex].deviceId);
       } catch (error) {
         console.error('Error accessing cameras:', error);
         alert('Unable to access cameras. Please check your device permissions.');
@@ -260,7 +246,31 @@
       downloadLink.click();
     }
 
-    document.getElementById('takePicture').addEventListener('click', takePicture);
+    // Switch Camera Functions
+    document.getElementById('nextCamera').addEventListener('click', () => {
+      currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+      startCamera(cameras[currentCameraIndex].deviceId);
+    });
+
+    document.getElementById('prevCamera').addEventListener('click', () => {
+      currentCameraIndex = (currentCameraIndex - 1 + cameras.length) % cameras.length;
+      startCamera(cameras[currentCameraIndex].deviceId);
+    });
+
+    // Shutter Button
+    document.getElementById('shutterBtn').addEventListener('click', takePicture);
+
+    // Flash Button
+    document.getElementById('flashBtn').addEventListener('click', () => {
+      flashOn = !flashOn;
+      const flashButton = document.getElementById('flashBtn');
+      if (flashOn) {
+        flashButton.style.backgroundColor = 'rgba(255, 255, 0, 0.8)';
+      } else {
+        flashButton.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+      }
+      alert(flashOn ? 'Flash On' : 'Flash Off');
+    });
 
     // Filter Functions
     document.getElementById('filterBlackWhite').addEventListener('click', () => {
@@ -278,7 +288,13 @@
       document.getElementById('videoFeed').style.filter = '';
     });
 
-    // Load available cameras on page load
+    // Zoom Slider
+    document.getElementById('zoomSlider').addEventListener('input', (event) => {
+      const videoFeed = document.getElementById('videoFeed');
+      videoFeed.style.transform = `scale(${event.target.value})`;
+    });
+
+    // Initialize cameras on page load
     window.onload = getCameras;
   </script>
 
