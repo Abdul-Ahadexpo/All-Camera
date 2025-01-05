@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera App</title>
+  <title>Camera App 📸</title>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
   <script src="https://kit.fontawesome.com/5fc4420cfa.js" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -165,9 +165,10 @@
 
     <!-- Footer Bar -->
     <div class="footer-bar">
-      <i id="flashToggle" class="fas fa-bolt"></i>
-      <div id="shutterButton" class="shutter-button"></div>
-      <i id="galleryButton" class="fas fa-images"></i>
+      <i id="flashToggle" class="fas fa-bolt" style="cursor:pointer"></i>
+      <div id="shutterButton" class="shutter-button" onclick="takePicture()"></div>
+      <i id="galleryButton" class="fas fa-images" style="cursor:pointer"></i>
+      <i id="cameraSwitch" class="fa-solid fa-camera-rotate" style="cursor:pointer"></i>
     </div>
 
     <!-- Record Indicator -->
@@ -177,32 +178,99 @@
     </div>
   </div>
 
+  <!-- Canvas for image capture -->
+  <canvas id="canvas" style="display:none"></canvas>
+  <a id="downloadLink" style="display:none"></a>
+
   <script>
-    // Initialize video feed
-    async function startCamera() {
-      const videoFeed = document.getElementById("videoFeed");
+    let currentStream = null;
+    let currentFilter = null;
+    let currentCameraIndex = 0;
+    let cameras = [];
+    let flashOn = false;
+
+    async function getCameras() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        videoFeed.srcObject = stream;
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(device => device.kind === 'videoinput');
+        cameras = videoInputs;
+
+        if (videoInputs.length === 0) {
+          alert('No cameras found on this device.');
+          return;
+        }
+
+        // Start the first camera
+        await startCamera(cameras[currentCameraIndex].deviceId);
       } catch (error) {
-        alert("Unable to access the camera.");
-        console.error(error);
+        console.error('Error accessing cameras:', error);
+        alert('Unable to access cameras. Please check your device permissions.');
       }
     }
 
-    // Flash Toggle
-    document.getElementById("flashToggle").addEventListener("click", () => {
-      alert("Flash toggle not supported yet.");
+    async function startCamera(deviceId) {
+      const videoFeed = document.getElementById('videoFeed');
+      const constraints = {
+        video: { deviceId: { exact: deviceId } }
+      };
+
+      try {
+        if (currentStream) {
+          currentStream.getTracks().forEach(track => track.stop());
+        }
+
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoFeed.srcObject = currentStream;
+      } catch (error) {
+        alert('Unable to start the camera. Please try again.');
+        console.error('Error starting camera:', error);
+      }
+    }
+
+    function takePicture() {
+      const videoFeed = document.getElementById('videoFeed');
+      const canvas = document.getElementById('canvas');
+      const downloadLink = document.getElementById('downloadLink');
+
+      canvas.width = videoFeed.videoWidth;
+      canvas.height = videoFeed.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+
+      // Apply current filter if any
+      if (currentFilter) {
+        ctx.filter = currentFilter;
+      }
+
+      const imageURL = canvas.toDataURL('image/png');
+      downloadLink.href = imageURL;
+      downloadLink.download = `captured-photo-${Date.now()}.png`;
+      downloadLink.click();
+    }
+
+    // Flash Button
+    document.getElementById('flashToggle').addEventListener('click', () => {
+      flashOn = !flashOn;
+      const flashButton = document.getElementById('flashToggle');
+      if (flashOn) {
+        flashButton.style.color = 'yellow';
+      } else {
+        flashButton.style.color = 'white';
+      }
+      alert(flashOn ? 'Flash On' : 'Flash Off');
     });
 
-    // Shutter Button
-    document.getElementById("shutterButton").addEventListener("click", () => {
-      alert("Photo captured!");
+    // Camera Switch Button
+    document.getElementById('cameraSwitch').addEventListener('click', () => {
+      currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+      startCamera(cameras[currentCameraIndex].deviceId);
     });
 
-    // Start Camera on Load
-    startCamera();
+    // Initialize cameras on page load
+    window.onload = getCameras;
   </script>
+
 </body>
 
 </html>
