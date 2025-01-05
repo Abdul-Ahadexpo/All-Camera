@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Selector 🎥</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      /* Prevent scrolling for full screen */
+    }
+
+    video,
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+  <h1 class="text-3xl font-bold mb-6 text-center text-blue-500">Camera Selector 🎥</h1>
+
+  <div id="cameraContainer" class="form-control w-full max-w-md mb-4">
+    <label class="label">
+      <span class="label-text text-white">Choose a camera:</span>
+    </label>
+    <!-- Camera radio buttons will be dynamically added here -->
+  </div>
+
+  <div class="flex flex-col items-center w-full">
+    <video id="videoFeed" autoplay playsinline class="rounded-lg border border-gray-700 w-full"></video>
+    <button id="takePicture" class="btn btn-secondary mt-4 w-full">Take Picture 📸</button>
+    <a id="downloadLink" class="hidden" download="captured-photo.png"></a>
+  </div>
+
+  <canvas id="canvas" class="hidden"></canvas>
+
+  <script>
+    async function getCameras() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(device => device.kind === 'videoinput');
+
+        const cameraContainer = document.getElementById('cameraContainer');
+        cameraContainer.innerHTML = ''; // Clear existing options
+
+        if (videoInputs.length === 0) {
+          alert('No cameras found on this device.');
+          return;
+        }
+
+        videoInputs.forEach((device, index) => {
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = 'camera';
+          radio.value = device.deviceId;
+          radio.id = `camera${index}`;
+          if (index === 0) radio.checked = true; // Automatically select the first camera
+
+          const label = document.createElement('label');
+          label.htmlFor = `camera${index}`;
+          label.textContent = device.label || `Camera ${index + 1}`;
+          label.className = 'label cursor-pointer mt-2';
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'flex items-center space-x-2';
+
+          wrapper.appendChild(radio);
+          wrapper.appendChild(label);
+
+          cameraContainer.appendChild(wrapper);
+        });
+
+        // Automatically start the first camera
+        await startCamera(videoInputs[0].deviceId);
+      } catch (error) {
+        console.error('Error accessing cameras:', error);
+        alert('Unable to access cameras. Please check your device permissions.');
+      }
+    }
+
+    async function startCamera(deviceId) {
+      const videoFeed = document.getElementById('videoFeed');
+
+      const constraints = {
+        video: { deviceId: { exact: deviceId } },
+      };
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoFeed.srcObject = stream;
+      } catch (error) {
+        if (error.name === 'OverconstrainedError') {
+          console.warn('OverconstrainedError: Falling back to default camera.');
+
+          // Fallback to default camera if specific one fails
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoFeed.srcObject = fallbackStream;
+          } catch (fallbackError) {
+            console.error('Error accessing default camera:', fallbackError);
+            alert('Unable to access any camera.');
+          }
+        } else {
+          console.error('Error starting camera:', error);
+          alert('Unable to start the camera. Please try again.');
+        }
+      }
+    }
+
+    function takePicture() {
+      const videoFeed = document.getElementById('videoFeed');
+      const canvas = document.getElementById('canvas');
+      const downloadLink = document.getElementById('downloadLink');
+
+      canvas.width = videoFeed.videoWidth;
+      canvas.height = videoFeed.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+
+      // Convert the canvas to an image and create a downloadable link
+      const imageURL = canvas.toDataURL('image/png');
+      downloadLink.href = imageURL;
+      downloadLink.download = `captured-photo-${Date.now()}.png`;
+      downloadLink.click(); // Automatically trigger download
+    }
+
+    document.getElementById('takePicture').addEventListener('click', takePicture);
+
+    // Load available cameras on page load
+    window.onload = getCameras;
+  </script>
+
+</body>
+
+</html>
