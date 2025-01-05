@@ -12,13 +12,19 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      /* Prevent scrolling for full screen */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #1f2937;
     }
 
     video,
     canvas {
       display: block;
       width: 100%;
+      max-width: 600px; /* Limit max width for better scaling on bigger screens */
       height: auto;
     }
 
@@ -44,6 +50,9 @@
 
     h1 {
       animation: fadeIn 2s ease-in-out;
+      font-size: 2rem;
+      color: #60a5fa;
+      text-align: center;
     }
 
     @keyframes fadeIn {
@@ -73,14 +82,71 @@
         transform: translateY(0);
       }
     }
+
+    .label {
+      font-size: 1.2rem;
+    }
+
+    .form-control {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      /* For larger screens, make the video feed slightly bigger */
+      video {
+        max-width: 800px;
+      }
+
+      .btn-custom {
+        width: auto;
+        font-size: 1.5rem;
+      }
+    }
+
+    .btn-hover {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      padding: 12px 24px;
+      background: #4e4;
+      transition: 0.4s;
+    }
+
+    .btn-hover::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300%;
+      height: 300%;
+      background: rgba(255, 255, 255, 0.15);
+      transition: all 0.5s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .btn-hover:hover::before {
+      width: 0;
+      height: 0;
+    }
+
+    .btn-hover:hover {
+      background-color: #34d399;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+
   </style>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+<body>
 
   <h1 class="text-3xl font-bold mb-6 text-center text-blue-500">Camera Selector 🎥</h1>
 
-  <div id="cameraContainer" class="form-control w-full max-w-md mb-4 camera-select">
+  <div id="cameraContainer" class="form-control mb-4 camera-select">
     <label class="label">
       <span class="label-text text-white">Choose a camera:</span>
     </label>
@@ -109,7 +175,6 @@
           return;
         }
 
-        // Create radio buttons for each camera
         videoInputs.forEach((device, index) => {
           const radio = document.createElement('input');
           radio.type = 'radio';
@@ -132,17 +197,8 @@
           cameraContainer.appendChild(wrapper);
         });
 
-        // Start the selected camera
-        const selectedCamera = videoInputs.find(device => device.deviceId === document.querySelector('input[name="camera"]:checked').value);
-        await startCamera(selectedCamera.deviceId);
-
-        // Listen for camera change
-        cameraContainer.addEventListener('change', (event) => {
-          if (event.target.name === 'camera') {
-            startCamera(event.target.value);
-          }
-        });
-
+        // Automatically start the first camera
+        await startCamera(videoInputs[0].deviceId);
       } catch (error) {
         console.error('Error accessing cameras:', error);
         alert('Unable to access cameras. Please check your device permissions.');
@@ -160,8 +216,21 @@
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         videoFeed.srcObject = stream;
       } catch (error) {
-        console.error('Error starting camera:', error);
-        alert('Unable to start the camera. Please try again.');
+        if (error.name === 'OverconstrainedError') {
+          console.warn('OverconstrainedError: Falling back to default camera.');
+
+          // Fallback to default camera if specific one fails
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoFeed.srcObject = fallbackStream;
+          } catch (fallbackError) {
+            console.error('Error accessing default camera:', fallbackError);
+            alert('Unable to access any camera.');
+          }
+        } else {
+          console.error('Error starting camera:', error);
+          alert('Unable to start the camera. Please try again.');
+        }
       }
     }
 
