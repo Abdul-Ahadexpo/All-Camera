@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera App 📸</title>
+  <title>Camera App</title>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.23/dist/full.min.css" rel="stylesheet" type="text/css" />
   <script src="https://kit.fontawesome.com/5fc4420cfa.js" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,327 +13,196 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      background-color: #1f2937;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #f3f4f6;
+      height: 100vh;
+      background-color: black;
+      font-family: 'Segoe UI', sans-serif;
     }
 
-    .camera-container {
-      width: 100%;
-      max-width: 800px;
+    .camera-app {
       position: relative;
-      margin-bottom: 20px;
-    }
-
-    video {
       width: 100%;
-      border-radius: 15px;
-      object-fit: cover;
-      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      height: 700px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.8);
     }
 
-    .camera-controls {
+    .video-feed {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+    }
+
+    .header-bar {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      width: 100%;
       display: flex;
       justify-content: space-between;
-      position: absolute;
-      top: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
+      padding: 0 15px;
+      color: white;
       z-index: 2;
     }
 
-    .control-btn {
-      background-color: rgba(0, 0, 0, 0.5);
+    .footer-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
       color: white;
-      border: none;
-      padding: 12px;
+      z-index: 2;
+    }
+
+    .shutter-button {
+      background-color: white;
       border-radius: 50%;
-      font-size: 1.5rem;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0px 4px 12px rgba(255, 255, 255, 0.6);
       cursor: pointer;
       transition: transform 0.3s ease;
     }
 
-    .control-btn:hover {
-      transform: scale(1.2);
+    .shutter-button:active {
+      transform: scale(0.9);
     }
 
-    .shutter-btn {
+    .grid-overlay {
       position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 18px;
-      border: none;
-      border-radius: 50%;
-      background-color: #34d399;
-      font-size: 2.5rem;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .shutter-btn:hover {
-      transform: scale(1.1);
-      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .shutter-btn:active {
-      transform: scale(1);
-    }
-
-    .zoom-slider {
-      position: absolute;
-      bottom: 110px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      z-index: 2;
-    }
-
-    .filter-btns {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-      position: absolute;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 3;
+      top: 0;
+      left: 0;
       width: 100%;
-      justify-content: center;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
     }
 
-    .filter-btn {
-      padding: 12px 24px;
-      border-radius: 50px;
-      background-color: #38bdf8;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
+    .grid-overlay div {
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    .filter-btn:hover {
-      background-color: #0ea5e9;
-      transform: scale(1.1);
-    }
-
-    .filter-btn:active {
-      transform: scale(1);
-    }
-
-    .flash-btn {
+    .mode-selector {
       position: absolute;
-      top: 15px;
-      right: 15px;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 10px;
-      border-radius: 50%;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-      z-index: 2;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
     }
 
-    /* Hide canvas and download link */
-    canvas {
+    .mode-button {
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+      text-transform: uppercase;
+      transition: opacity 0.3s ease;
+    }
+
+    .mode-button.active {
+      font-weight: bold;
+      opacity: 1;
+    }
+
+    .mode-button:hover {
+      opacity: 0.8;
+    }
+
+    .record-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: red;
+      font-size: 1rem;
+      font-weight: bold;
       display: none;
     }
 
-    /* Make everything responsive */
-    @media screen and (max-width: 768px) {
-      .shutter-btn {
-        padding: 15px;
-        font-size: 2rem;
-      }
-
-      .zoom-slider {
-        width: 90%;
-      }
-
-      .filter-btns {
-        bottom: 60px;
-      }
-    }
-
-    @media screen and (max-width: 480px) {
-      .shutter-btn {
-        padding: 12px;
-        font-size: 1.8rem;
-      }
-
-      .zoom-slider {
-        width: 90%;
-      }
-
-      .filter-btns {
-        bottom: 40px;
-      }
-
-      .control-btn {
-        padding: 8px;
-        font-size: 1.2rem;
-      }
+    .record-indicator.active {
+      display: flex;
     }
   </style>
 </head>
 
 <body>
+  <div class="camera-app">
+    <video id="videoFeed" class="video-feed" autoplay playsinline></video>
 
-  <div id="cameraContainer" class="camera-container"></div>
+    <!-- Header Bar -->
+    <div class="header-bar">
+      <span>HDR</span>
+      <i class="fas fa-cog"></i>
+    </div>
 
-  <div class="camera-controls">
-    <button id="prevCamera" class="control-btn"><i class="fas fa-chevron-left"></i></button>
-    <button id="nextCamera" class="control-btn"><i class="fas fa-chevron-right"></i></button>
+    <!-- Grid Overlay -->
+    <div id="gridOverlay" class="grid-overlay"></div>
+
+    <!-- Mode Selector -->
+    <div class="mode-selector">
+      <span class="mode-button active">Photo</span>
+      <span class="mode-button">Video</span>
+      <span class="mode-button">Portrait</span>
+    </div>
+
+    <!-- Footer Bar -->
+    <div class="footer-bar">
+      <i id="flashToggle" class="fas fa-bolt"></i>
+      <div id="shutterButton" class="shutter-button"></div>
+      <i id="galleryButton" class="fas fa-images"></i>
+    </div>
+
+    <!-- Record Indicator -->
+    <div id="recordIndicator" class="record-indicator">
+      <i class="fas fa-circle"></i>
+      <span>REC</span>
+    </div>
   </div>
-
-  <div class="video-container">
-    <video id="videoFeed" autoplay playsinline></video>
-  </div>
-
-  <button id="shutterBtn" class="shutter-btn"><i class="fas fa-circle"></i></button>
-
-  <div class="zoom-slider">
-    <input type="range" id="zoomSlider" min="1" max="3" step="0.1" value="1" />
-  </div>
-
-  <div class="filter-btns">
-    <button id="filterBlackWhite" class="filter-btn">B/W</button>
-    <button id="filterSepia" class="filter-btn">Sepia</button>
-    <button id="resetFilters" class="filter-btn">Reset</button>
-  </div>
-
-  <button id="flashBtn" class="flash-btn"><i class="fas fa-bolt"></i></button>
-
-  <a id="downloadLink" class="hidden" download="captured-photo.png"></a>
-  <canvas id="canvas"></canvas>
 
   <script>
-    let currentStream = null;
-    let currentFilter = null;
-    let currentCameraIndex = 0;
-    let cameras = [];
-    let flashOn = false;
-
-    async function getCameras() {
+    // Initialize video feed
+    async function startCamera() {
+      const videoFeed = document.getElementById("videoFeed");
       try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputs = devices.filter(device => device.kind === 'videoinput');
-        cameras = videoInputs;
-
-        const cameraContainer = document.getElementById('cameraContainer');
-        cameraContainer.innerHTML = ''; // Clear existing options
-
-        if (videoInputs.length === 0) {
-          alert('No cameras found on this device.');
-          return;
-        }
-
-        // Start the first camera
-        await startCamera(cameras[currentCameraIndex].deviceId);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoFeed.srcObject = stream;
       } catch (error) {
-        console.error('Error accessing cameras:', error);
-        alert('Unable to access cameras. Please check your device permissions.');
+        alert("Unable to access the camera.");
+        console.error(error);
       }
     }
 
-    async function startCamera(deviceId) {
-      const videoFeed = document.getElementById('videoFeed');
-      const constraints = {
-        video: { deviceId: { exact: deviceId } }
-      };
-
-      try {
-        if (currentStream) {
-          currentStream.getTracks().forEach(track => track.stop());
-        }
-
-        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        videoFeed.srcObject = currentStream;
-      } catch (error) {
-        alert('Unable to start the camera. Please try again.');
-        console.error('Error starting camera:', error);
-      }
-    }
-
-    function takePicture() {
-      const videoFeed = document.getElementById('videoFeed');
-      const canvas = document.getElementById('canvas');
-      const downloadLink = document.getElementById('downloadLink');
-
-      canvas.width = videoFeed.videoWidth;
-      canvas.height = videoFeed.videoHeight;
-
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
-
-      // Apply current filter if any
-      if (currentFilter) {
-        ctx.filter = currentFilter;
-      }
-
-      const imageURL = canvas.toDataURL('image/png');
-      downloadLink.href = imageURL;
-      downloadLink.download = `captured-photo-${Date.now()}.png`;
-      downloadLink.click();
-    }
-
-    // Switch Camera Functions
-    document.getElementById('nextCamera').addEventListener('click', () => {
-      currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
-      startCamera(cameras[currentCameraIndex].deviceId);
-    });
-
-    document.getElementById('prevCamera').addEventListener('click', () => {
-      currentCameraIndex = (currentCameraIndex - 1 + cameras.length) % cameras.length;
-      startCamera(cameras[currentCameraIndex].deviceId);
+    // Flash Toggle
+    document.getElementById("flashToggle").addEventListener("click", () => {
+      alert("Flash toggle not supported yet.");
     });
 
     // Shutter Button
-    document.getElementById('shutterBtn').addEventListener('click', takePicture);
-
-    // Flash Button
-    document.getElementById('flashBtn').addEventListener('click', () => {
-      flashOn = !flashOn;
-      const flashButton = document.getElementById('flashBtn');
-      if (flashOn) {
-        flashButton.style.backgroundColor = 'rgba(255, 255, 0, 0.8)';
-      } else {
-        flashButton.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-      }
-      alert(flashOn ? 'Flash On' : 'Flash Off');
+    document.getElementById("shutterButton").addEventListener("click", () => {
+      alert("Photo captured!");
     });
 
-    // Filter Functions
-    document.getElementById('filterBlackWhite').addEventListener('click', () => {
-      currentFilter = 'grayscale(100%)';
-      document.getElementById('videoFeed').style.filter = currentFilter;
-    });
-
-    document.getElementById('filterSepia').addEventListener('click', () => {
-      currentFilter = 'sepia(100%)';
-      document.getElementById('videoFeed').style.filter = currentFilter;
-    });
-
-    document.getElementById('resetFilters').addEventListener('click', () => {
-      currentFilter = null;
-      document.getElementById('videoFeed').style.filter = '';
-    });
-
-    // Zoom Slider
-    document.getElementById('zoomSlider').addEventListener('input', (event) => {
-      const videoFeed = document.getElementById('videoFeed');
-      videoFeed.style.transform = `scale(${event.target.value})`;
-    });
-
-    // Initialize cameras on page load
-    window.onload = getCameras;
+    // Start Camera on Load
+    startCamera();
   </script>
-
 </body>
 
 </html>
